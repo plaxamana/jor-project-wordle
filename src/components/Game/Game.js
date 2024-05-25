@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import GuessInput from "../GuessInput";
 import GuessResults from "../GuessResults";
+import Banner from "../Banner";
 
 import { sample } from "../../utils";
 import { WORDS } from "../../data";
@@ -12,11 +13,14 @@ const answer = sample(WORDS);
 console.info({ answer });
 
 function Game() {
-  const [guessesMade, setGuessesMade] = useState(0);
+  const [hasGameEnded, setHasGameEnded] = useState(false);
+  const [hasPlayerWon, setHasPlayerWon] = useState(false);
   const [guessResults, setGuessResults] = useState([]);
 
   const handleAddGuess = (guessInput) => {
-    if (guessesMade === NUM_OF_GUESSES_ALLOWED) return;
+    if (guessResults.length === NUM_OF_GUESSES_ALLOWED) {
+      return;
+    }
 
     const newGuess = {
       id: crypto.randomUUID(),
@@ -24,15 +28,33 @@ function Game() {
     };
 
     const newGuesses = [...guessResults, newGuess];
+    const isCorrectAnswer = newGuesses.findIndex(
+      (guess) => guess.name === answer
+    );
+
+    if (isCorrectAnswer > -1) {
+      setHasPlayerWon(true);
+      setHasGameEnded(true);
+    } else if (newGuesses.length === NUM_OF_GUESSES_ALLOWED) {
+      setHasGameEnded(true);
+    }
 
     setGuessResults(newGuesses);
-    setGuessesMade(guessesMade + 1);
   };
 
   return (
     <>
       <GuessResults guessResults={guessResults} answer={answer} />
-      <GuessInput addGuess={handleAddGuess} />
+
+      {!hasGameEnded ? (
+        <GuessInput addGuess={handleAddGuess} />
+      ) : (
+        <Banner
+          hasPlayerWon={hasPlayerWon}
+          answer={answer}
+          numOfGuesses={guessResults.length}
+        />
+      )}
     </>
   );
 }
